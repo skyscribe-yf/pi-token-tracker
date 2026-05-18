@@ -295,7 +295,7 @@ function generateReport(days: number): string {
 // ── Taskplane Runtime Scanner ─────────────────────────────────────────
 
 /**
- * Scan all ~/srcs/*/.pi/runtime/ project directories for taskplane
+ * Scan all ~/srcs/* /.pi/runtime/ project directories for taskplane
  * lane-worker and merge-agent token usage from exit summaries.
  *
  * These agents run in separate pi --mode rpc processes with
