@@ -1,0 +1,41 @@
+{
+  "name": "pi-token-tracker",
+  "version": "1.0.0",
+  "description": "Pi extension that tracks token usage across all sessions including taskplane workers and merge agents. Writes per-call token records to usage.jsonl and provides a token-report command.",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "token",
+    "usage",
+    "analytics"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "author": "skyscribe-yf",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skyscribe-yf/pi-token-tracker.git"
+  },
+  "homepage": "https://github.com/skyscribe-yf/pi-token-tracker#readme",
+  "bugs": {
+    "url": "https://github.com/skyscribe-yf/pi-token-tracker/issues"
+  },
+  "files": [
+    "index.ts",
+    "token-tracker.ts",
+    "README.md"
+  ],
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    }
+  }
+}
