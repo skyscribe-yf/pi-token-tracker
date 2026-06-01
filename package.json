@@ -1,6 +1,6 @@
 {
   "name": "pi-token-tracker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pi extension that tracks token usage across all sessions including taskplane workers and merge agents. Writes per-call token records to usage.jsonl and provides a token-report command.",
   "keywords": [
     "pi-package",
