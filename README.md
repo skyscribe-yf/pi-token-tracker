@@ -7,6 +7,23 @@ Pi extension that tracks per-call token usage across all sessions, including tas
 - **`message_end` hook**: Writes one JSONL line per assistant response to `~/.pi/token-logs/usage.jsonl`
 - **`token-report` command**: Scans usage.jsonl + taskplane runtime exit summaries and prints a hierarchical vendor/model breakdown
 
+### Recorded Fields
+
+Each JSONL record contains:
+
+| Field | Description |
+|-------|-------------|
+| `date`, `time` | ISO date/timestamp |
+| `provider`, `model` | Model identifier (e.g., `anthropic`, `claude-sonnet-4`) |
+| `inputTokens` | Input token count |
+| `outputTokens` | Output token count |
+| `cacheReadTokens` | Cache read tokens (if supported) |
+| `cacheWriteTokens` | Cache write tokens (if supported) |
+| `totalTokens` | Sum of all token counts |
+| `cost` | Estimated cost in USD |
+| `ttftMs` | **Time to First Token** (ms) — from HTTP response headers to first streaming token |
+| `tps` | **Tokens Per Second** — output tokens / streaming duration |
+
 ## Installation
 
 ```bash
