@@ -1,6 +1,6 @@
 {
   "name": "pi-token-tracker",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Pi extension that tracks token usage across all sessions including taskplane workers and merge agents. Writes per-call token records to usage.jsonl and provides a token-report command.",
   "keywords": [
     "pi-package",
@@ -20,6 +20,7 @@
   "bugs": {
     "url": "https://github.com/skyscribe-yf/pi-token-tracker/issues"
   },
+  "main": "index.ts",
   "files": [
     "index.ts",
     "token-tracker.ts",

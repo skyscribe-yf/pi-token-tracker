@@ -60,6 +60,24 @@ function getApiKeyPrefix(ctx: any): string {
 export default function (pi: ExtensionAPI) {
   ensureLogDir();
 
+  // Per-message timing state.  A single turn may contain multiple assistant
+  // messages interleaved with tool calls.  We isolate timing to each
+  // individual streaming response so that tool-execution time is never
+  // included in TTFT or TPS.
+  let providerResponseMs: number | undefined; // after_provider_response
+  let firstTokenMs: number | undefined;       // first message_update
+
+  pi.on("after_provider_response", async () => {
+    providerResponseMs = Date.now();
+  });
+
+  pi.on("message_update", async (event) => {
+    if (event.message.role !== "assistant") return;
+    if (!firstTokenMs) {
+      firstTokenMs = Date.now();
+    }
+  });
+
   // Per-call token recording — fires for EVERY assistant message,
   // including in taskplane worker/merge agent RPC sessions.
   pi.on("message_end", async (event, ctx) => {
@@ -72,6 +90,29 @@ export default function (pi: ExtensionAPI) {
     const now = new Date();
     const date = now.toISOString().slice(0, 10);
     const time = now.toISOString();
+    const nowMs = Date.now();
+
+    // TTFT: time from HTTP response headers to first streaming token.
+    // Falls back to undefined when the provider does not expose response
+    // timing or when streaming produced zero update events.
+    const ttftMs =
+      providerResponseMs && firstTokenMs
+        ? firstTokenMs - providerResponseMs
+        : undefined;
+
+    // TPS: output tokens / streaming generation duration (seconds).
+    // Computed only when we observed at least one streaming update.
+    // Guard against division by zero (extremely fast responses).
+    const elapsedSec = firstTokenMs ? (nowMs - firstTokenMs) / 1000 : 0;
+    const tps =
+      firstTokenMs && usage.output > 0 && elapsedSec > 0
+        ? usage.output / elapsedSec
+        : undefined;
+
+    // Reset timing state so the next assistant message (or the next turn)
+    // starts with a clean slate.
+    providerResponseMs = undefined;
+    firstTokenMs = undefined;
 
     const record = {
       date,
@@ -90,6 +131,8 @@ export default function (pi: ExtensionAPI) {
         (usage.cacheRead || 0) +
         (usage.cacheWrite || 0),
       cost: usage.cost?.total || 0,
+      ttftMs,
+      tps,
     };
 
     try {
@@ -295,7 +338,7 @@ function generateReport(days: number): string {
 // ── Taskplane Runtime Scanner ─────────────────────────────────────────
 
 /**
- * Scan all ~/srcs/* /.pi/runtime/ project directories for taskplane
+ * Scan all ~/srcs/*/.pi/runtime/ project directories for taskplane
  * lane-worker and merge-agent token usage from exit summaries.
  *
  * These agents run in separate pi --mode rpc processes with
