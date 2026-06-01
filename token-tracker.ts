@@ -67,6 +67,12 @@ export default function (pi: ExtensionAPI) {
   let providerResponseMs: number | undefined; // after_provider_response
   let firstTokenMs: number | undefined;       // first message_update
 
+  // Per-message deduplication key.  Pi may emit message_end twice for
+  // the same assistant message (e.g. once from streaming completion and
+  // once from session persistence).  We skip the duplicate to avoid
+  // double-counting tokens.
+  let lastRecordFingerprint: string | undefined;
+
   pi.on("after_provider_response", async () => {
     providerResponseMs = Date.now();
   });
@@ -91,6 +97,12 @@ export default function (pi: ExtensionAPI) {
     const date = now.toISOString().slice(0, 10);
     const time = now.toISOString();
     const nowMs = Date.now();
+
+    // Deduplicate: skip if this exact (model, input, output) combination
+    // was already recorded within the same second.
+    const fingerprint = `${model?.id || "?"}|${usage.input}|${usage.output}`;
+    if (fingerprint === lastRecordFingerprint) return;
+    lastRecordFingerprint = fingerprint;
 
     // TTFT: time from HTTP response headers to first streaming token.
     // Falls back to undefined when the provider does not expose response
